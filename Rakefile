@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "cronoscrmod"
   gem.homepage = "http://github.com/edmundhighcock/cronoscrmod"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{A module to allow CodeRunner to run the integrated tokamak modelling suite Cronos}
+  gem.description = %Q{A module to allow CodeRunner to run the integrated tokamak modelling suite Cronos. Requires matlab and matlab-ruby (Cronos also requires Matlab).}
   gem.email = "edmundhighcock@users.sourceforge.net"
   gem.authors = ["Edmund Highcock"]
   # dependencies defined in Gemfile
@@ -32,13 +32,13 @@ Rake::TestTask.new(:test) do |test|
   test.verbose = true
 end
 
-require 'rcov/rcovtask'
-Rcov::RcovTask.new do |test|
-  test.libs << 'test'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
-  test.rcov_opts << '--exclude "gems/*"'
-end
+#require 'rcov/rcovtask'
+#Rcov::RcovTask.new do |test|
+  ##test.libs << 'test'
+  ##test.pattern = 'test/**/test_*.rb'
+  ##test.verbose = true
+  ##test.rcov_opts << '--exclude "gems/*"'
+##end
 
 task :default => :test
 
