@@ -1,7 +1,19 @@
+eputs "Cronos module written by Edmund Highcock, based on MatLab tools written by Jonathan Citrin" unless $has_put_startup_message_for_coderunner
+
+require 'matlab'
 class CodeRunner
 	class Cronos < Run
 		# Where this file is
 		@code_module_folder = folder = File.dirname(File.expand_path(__FILE__)) # i.e. the directory this file is in
+		begin
+	  	@engine = Matlab::Engine.new("#{ENV['MATLAB_BINDIR']}matlab -nodesktop -nosplash ")
+		#rescue => err
+			#if err.to_s =~ /driver for matlab/
+				#raise "Please make sure matlab is in your path"
+			#else
+				#raise err
+			#end
+		end
 
 
 		################################################
