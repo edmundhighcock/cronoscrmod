@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "cronoscrmod"
-  s.version = "0.1.0"
+  s.version = "0.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Edmund Highcock"]
@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "cronoscrmod.gemspec",
     "lib/cronoscrmod.rb",
     "lib/cronoscrmod/cronos.rb",
     "lib/cronoscrmod/defaults_files/cronos_defaults.rb",
