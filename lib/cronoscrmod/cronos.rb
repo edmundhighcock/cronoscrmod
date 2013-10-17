@@ -1,6 +1,6 @@
 eputs "The Cronos CodeRunner module is written by Edmund Highcock, based on MatLab tools written by Jonathan Citrin" unless $has_put_startup_message_for_coderunner
 
-require 'matlab'
+#require 'matlab'
 class CodeRunner
 	class Cronos < Run
 		# Where this file is
