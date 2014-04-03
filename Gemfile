@@ -2,7 +2,7 @@ source "http://rubygems.org"
 # Add dependencies required to use your gem here.
 # Example:
 #   gem "activesupport", ">= 2.3.5"
-   gem "coderunner", ">= 0.13.18"
+   gem "coderunner", ">= 0.14.13"
    #gem "matlab-ruby", "> 2.0.0"
 
 # Add dependencies to develop your gem here.
