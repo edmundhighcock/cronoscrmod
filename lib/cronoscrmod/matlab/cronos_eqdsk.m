@@ -1,4 +1,4 @@
-function no_results = cronos_eqdsk(data)
+function no_results = cronos_eqdsk(data, tavg)
 %CREATES A EFIT EQDSK G FILE AND MATLABSTRUCTURE FROM CRONOS DATA.EQUI DATA. USED FOR CREATING 
 %GEOMETRY INPUT FILES FOR GENE. ALSO CREATES CONVENIENT MATLAB STRUCTURE WITH KEY INFORMATION
 %
@@ -8,7 +8,7 @@ function no_results = cronos_eqdsk(data)
 
 %%%%%%%%%%%%INPUT PARAMETERS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fname='JET75225_Ptotred'; %choose a name for the output geometry file
-tavg=[46 47]; %choose a time window for averaging of CRONOS data
+%tavg=[46 47]; %choose a time window for averaging of CRONOS data
 printflag=0; %flag to plot or not (=1) or not to plot (anything else) a figure of the 2D flux surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -83,14 +83,20 @@ F=mean(data.equi.F(ind,:));
 P=mean(data.prof.ptot(ind,:));
 %FFprime=gradient(F,-psiequi); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
 % EGH Bugfix
-FFprime=gradient(F,psiequi); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
-Pprime=gradient(P,psiequi);
+% F and P are on grids of x not rho, so need to take gradient wrt psix
+FFprime=gradient(F,psix); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
+Pprime=gradient(P,psix);
 
 q=interp1(psinormx,qraw,xpsi);
 F=interp1(psinormx,F,xpsi);
-FFprime=interp1(psinormx,FFprime,xpsi).*F; FFprime(1)=FFprime(2); 
+FFprime=interp1(psinormx,FFprime,xpsi).*F; %FFprime(1) = 0.0; 
+%FFprime(1)=(FFprime(1)+FFprime(2))/2.0; 
+%FFprime(1) = FFprime(2);
 P=interp1(psinormx,P,xpsi);
-Pprime=interp1(psinormx,Pprime,xpsi); Pprime(1)=Pprime(2); 
+Pprime=interp1(psinormx,Pprime,xpsi); %Pprime(1) = 0.0; 
+Pprime(1)=(Pprime(1)+Pprime(2))/2.0; 
+%Pprime(1)=Pprime(2);
+Pprime(1) = 0.0;
 
 %define header quantities for eqdsk file
 boxw=maxR-minR; 
@@ -100,6 +106,7 @@ rleft=minR;
 
 zmid=(maxZ+minZ)/2; 
 zmaxis=Z(1,1);
+
 
 %ZMID AND ZMAXIS SWITCHED TO ZERO TO BE CONSISTENT WITH THE CHEASE EQDSK INFO
 %zmid=0; 
@@ -113,13 +120,14 @@ psiAxis=psiequi(1);
 psiSep=psiequi(end);
 B=mean(data.geo.b0(ind));
 Ip=mean(data.gene.ip(ind))/1e6;
+Ip=mean(data.gene.ip(ind));
 
 fid1 = fopen(fname, 'w');
 
 %write header quantities
 fprintf(fid1, '     JET    EFIT  TRACER                           %d  %d  %d\n',0,resoR,resoZ);
 fprintf(fid1,'% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n',...
-boxw,boxh,rmaj,rleft,zmid,rmaxis1,zmaxis,psiAxis,psiSep,B,0,psiAxis,0,rmaxis1,0,zmaxis,0,psiSep,0,0);;
+boxw,boxh,rmaj,rleft,zmid,rmaxis1,zmaxis,psiAxis,psiSep,B,Ip,psiAxis,0,rmaxis1,0,zmaxis,0,psiSep,0,0);;
 
 %write F, FF', P, P' quantities 
 for k=1:resopsi
