@@ -52,6 +52,7 @@ dvdrho=mean(data.equi.vpr(ind,:));
 xpsi=linspace(0,1,resopsi);
 
 
+
 %define boundaries of rectangular grid
 maxR=max(max(R))+bleed;
 minR=min(min(R))-bleed;
