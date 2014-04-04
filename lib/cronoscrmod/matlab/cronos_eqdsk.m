@@ -1,4 +1,4 @@
-function no_results = cronos_eqdsk(data, tavg)
+function no_results = cronos_eqdsk(data, tavg, resofactor)
 %CREATES A EFIT EQDSK G FILE AND MATLABSTRUCTURE FROM CRONOS DATA.EQUI DATA. USED FOR CREATING 
 %GEOMETRY INPUT FILES FOR GENE. ALSO CREATES CONVENIENT MATLAB STRUCTURE WITH KEY INFORMATION
 %
@@ -34,9 +34,9 @@ psix=interp1(xrho,psiequi,x);
 rho1=mean(data.equi.rhomax(ind));
 
 %set the resolution of the rectangular box (for now kept the same as the theta resolution from cronos)
-resoR=resotheta; 
-resoZ=resotheta;
-resopsi=resotheta;
+resoR=resotheta*resofactor; 
+resoZ=resotheta*resofactor;
+resopsi=resotheta*resofactor;
 
 %resoR=100; 
 %resoZ=100;
@@ -45,8 +45,9 @@ resopsi=resotheta;
 %interpolate equi.psi onto the uniform toroidal flux grid and create 
 %the normalized poloidal flux coordinate to interpolate the q, P, P', F, FF' profiles
 xrho=mean(data.equi.rhoRZ(ind,:)); xrho=xrho./xrho(end); xrho=double(xrho);
-psix=interp1(xrho,psiequi,x);
+psix=interp1(xrho,psiequi,x, 'splines');
 psinormx=(psix-psix(1))./(psix(end)-psix(1));
+psinormequi = (psiequi-psiequi(1))./(psiequi(end) - psiequi(1));
 dvdrho=mean(data.equi.vpr(ind,:));
 %create desired uniform normalized poloidal flux grid
 xpsi=linspace(0,1,resopsi);
@@ -88,18 +89,29 @@ P=mean(data.prof.ptot(ind,:));
 FFprime=gradient(F,psix); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
 Pprime=gradient(P,psix);
 
+% Values of psi on the output grid of xpsi
+psixpsi = interp1(psinormequi, psiequi, xpsi);
+
 q=interp1(psinormx,qraw,xpsi);
-F=interp1(psinormx,F,xpsi);
+F=interp1(psinormx,F,xpsi, 'spline');
 FFprime=interp1(psinormx,FFprime,xpsi).*F; %FFprime(1) = 0.0; 
+%FFprime = gradient(F, psixpsi).*F;
+%FFprime = interp1(psinormequi, mean(squeeze(data.equi.df2RZ(ind, :)))*pi, xpsi);
 %FFprime(1)=(FFprime(1)+FFprime(2))/2.0; 
-%FFprime(1) = FFprime(2);
-FFprime(1) = 0.0;
-P=interp1(psinormx,P,xpsi);
+FFprime(3) = FFprime(4);
+FFprime(2) = FFprime(3);
+FFprime(1) = FFprime(2);
+%FFprime(1) = 0.0;
+P=interp1(psinormx,P,xpsi, 'spline');
 Pprime=interp1(psinormx,Pprime,xpsi); %Pprime(1) = 0.0; 
+%Pprime = interp1(psinormequi, mean(squeeze(data.equi.dprRZ(ind, :)))*-300000, xpsi);
+%Pprime=gradient(P, psixpsi);
 %Pprime(1)=(Pprime(1)+Pprime(2))/2.0; 
-Pprime(1)=Pprime(2)/2.0;
-%Pprime(1)=Pprime(2);
-Pprime(1) = 0.0;
+%Pprime(1)=Pprime(2)/2.0;
+Pprime(3)=Pprime(4);
+Pprime(2)=Pprime(3);
+Pprime(1)=Pprime(2);
+%Pprime(1) = 0.0;
 
 %define header quantities for eqdsk file
 boxw=maxR-minR; 

@@ -1,5 +1,13 @@
 function no_results = output_ogyropsi(data, tavg)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The ogyropsi CHEASE output file 
+% consists of MKSA quantities on a
+% flux surface grid. Not sure yet
+% what the spacing of the grid is
+% set by.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 ind=round(interp1(data.gene.temps,1:length(data.gene.temps),tavg)); ind=ind(1):ind(2); %find the indexes in data.gene.temps of the desired time window
 npsi = size(data.equi.R, 2);
 nchi = size(data.equi.R, 3) - 1; % ogyropsi doesn't have the 2pi point
@@ -59,6 +67,59 @@ f=mean(data.equi.F(ind,:));
 write_array(outfile, 'f', f);
 fdfdpsi = gradient(f, psix).*f;
 write_array(outfile, 'fdfdpsi', fdfdpsi);
+
+%%% FLUX SURFACE VOLUME 
+v=mean(data.equi.volume(ind,:));
+% The above gives NaNs.... don't know why
+v = q*0.0;
+write_array(outfile, 'V', v);
+
+
+% SQRT TOROIDAL FLUX
+rhox = interp1(xrho, mean(data.equi.rhoRZ(ind,:)), x);
+write_array(outfile, 'rho_t', rhox);
+
+%%% MAGNETIC SHEAR
+shear=mean(data.equi.shear(ind,:)); shear=double(shear);
+write_array(outfile, 'shear', shear);
+dsheardpsi = gradient(shear, psix);
+write_array(outfile, 'dsheardpsi', dsheardpsi);
+
+dummy_array = shear*0.0;
+write_array(outfile, 'kappa', dummy_array);
+write_array(outfile, 'delta_lower', dummy_array);
+write_array(outfile, 'delta_upper', dummy_array);
+write_array(outfile, 'dVdpsi', dummy_array);
+write_array(outfile, 'dpsidrhotor', dummy_array);
+write_array(outfile, 'GDPSI_av', dummy_array);
+write_array(outfile, 'radius_av', dummy_array);
+write_array(outfile, 'R_av', dummy_array);
+
+%%% ELECTRON PROFILES
+te=mean(data.prof.te(ind,:));
+write_array(outfile, 'TE', te);
+dtedpsi = gradient(te, psix);
+write_array(outfile, 'DTEDPSI', dtedpsi);
+
+ne=mean(data.prof.ne(ind,:));
+write_array(outfile, 'NE', ne);
+dnedpsi = gradient(ne, psix);
+write_array(outfile, 'DNEDPSI', dnedpsi);
+
+%%% ION PROFILES
+ti=mean(data.prof.ti(ind,:));
+write_array(outfile, 'TI', ti);
+dtidpsi = gradient(ti, psix);
+write_array(outfile, 'DTIDPSI', dtidpsi);
+
+ni=mean(data.prof.ni(ind,:));
+write_array(outfile, 'NI', ni);
+dnidpsi = gradient(ni, psix);
+write_array(outfile, 'DNIDPSI', dnidpsi);
+
+%%% ZEFF
+zeff=mean(data.prof.zeff(ind,:));
+write_array(outfile, 'ZEFF', zeff);
 
 %%% MAJOR RADIUS OF FLUX SURFACES
 write_array(outfile, 'R', R(:, 1:nchi));
