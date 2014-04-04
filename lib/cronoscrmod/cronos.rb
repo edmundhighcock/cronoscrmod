@@ -38,7 +38,12 @@ class CodeRunner
 			def cronos(*args)
 				if args.size > 0
 					args.each do |com|
-					CodeRunner::Cronos.rcp.engine_handler.cronos.puts(com)
+						begin
+							CodeRunner::Cronos.rcp.engine_handler.cronos.puts(com)
+						rescue Errno::EPIPE
+							CodeRunner::Cronos.rcp.engine_handler.restart_cronos(@r.executable.sub(/cronos$/, ""))
+							retry
+						end
 					end
 				end
 			end
@@ -58,7 +63,12 @@ class CodeRunner
 				return if @cronos_started
 				raise "cronos not found in #{path}" unless FileTest.exist?("#{path}/cronos.m")
 				@cronos = IO.popen("#{path}/cronos 3>&2 2>&1 1>&3 | grep -v 'Time Machine' 3>&2 2>&1 1>&3 ",  'w')
+				@cronos.puts("addpath('#{CodeRunner::Cronos.rcp.code_module_folder}/matlab')")
 				@cronos_started = true
+			end
+			def restart_cronos(path)
+				@cronos_started = false
+				start_cronos(path)
 			end
 			def new_file
 				@cronos.puts("zuicreate")

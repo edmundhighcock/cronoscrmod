@@ -1,4 +1,5 @@
-%CREATES A EFIT EQDSK G FILE AND MATLAB STRUCTURE FROM CRONOS DATA.EQUI DATA. USED FOR CREATING 
+function no_results = cronos_eqdsk(data)
+%CREATES A EFIT EQDSK G FILE AND MATLABSTRUCTURE FROM CRONOS DATA.EQUI DATA. USED FOR CREATING 
 %GEOMETRY INPUT FILES FOR GENE. ALSO CREATES CONVENIENT MATLAB STRUCTURE WITH KEY INFORMATION
 %
 %A CRONOS DATA FILE NEEDS TO BE IN THE BACKGROUND WHEN RUNNING THIS ROUTINE
@@ -8,7 +9,7 @@
 %%%%%%%%%%%%INPUT PARAMETERS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fname='JET75225_Ptotred'; %choose a name for the output geometry file
 tavg=[46 47]; %choose a time window for averaging of CRONOS data
-printflag=1; %flag to plot or not (=1) or not to plot (anything else) a figure of the 2D flux surfaces
+printflag=0; %flag to plot or not (=1) or not to plot (anything else) a figure of the 2D flux surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -57,8 +58,14 @@ minR=min(min(R))-bleed;
 maxZ=max(max(Z))+bleed;
 minZ=min(min(Z))-bleed;
 
+maxxZ = max([maxZ, -minZ]);
+maxZ = maxxZ;
+minZ = -maxxZ;
+
 %create rectangular grid
-xR=linspace(minR,maxR,resoR); yR=linspace(maxZ,minZ,resoZ);
+xR=linspace(minR,maxR,resoR); 
+% EGH Z is defined from - to plus, and it must also be symmetric
+yR=linspace(minZ,maxZ,resoZ);
 [xnodes,ynodes] = meshgrid(xR,yR); %xnodes, ynodes are matrices defining the x and y (R and Z) coordinates
 
 %Create a 2D array for psi corresponding to x,theta (is a flux function, so same at every theta and tmp is discarded)
@@ -74,12 +81,14 @@ qraw=mean(data.equi.q(ind,:)); qraw=double(qraw);
 s=mean(data.equi.shear(ind,:)); 
 F=mean(data.equi.F(ind,:));
 P=mean(data.prof.ptot(ind,:));
-FFprime=gradient(F,-psiequi); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
-Pprime=gradient(F,-psiequi);
+%FFprime=gradient(F,-psiequi); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
+% EGH Bugfix
+FFprime=gradient(F,psiequi); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
+Pprime=gradient(P,psiequi);
 
 q=interp1(psinormx,qraw,xpsi);
 F=interp1(psinormx,F,xpsi);
-FFprime=interp1(psinormx,FFprime,xpsi); FFprime(1)=FFprime(2); 
+FFprime=interp1(psinormx,FFprime,xpsi).*F; FFprime(1)=FFprime(2); 
 P=interp1(psinormx,P,xpsi);
 Pprime=interp1(psinormx,Pprime,xpsi); Pprime(1)=Pprime(2); 
 
@@ -158,6 +167,28 @@ for k=1:resopsi
 		fprintf(fid1,'\n');
 	end
 end
+
+fprintf(fid1, ' %d %d \n', resotheta-1, 1);
+j = 1
+for k=1:(resotheta-1)
+	fprintf(fid1, '% 16.9E', R(end, k));
+	if mod(j,5)==0
+		fprintf(fid1, '\n');
+	end
+	j = j + 1;
+	fprintf(fid1, '% 16.9E', Z(end, k));
+	if mod(j,5)==0
+		fprintf(fid1, '\n');
+	end
+	j = j + 1;
+end
+	if mod(j-1,5)~=0
+		fprintf(fid1, '\n');
+	end
+
+fprintf(fid1, ' %16.9E  %16.9E \n', 0.0, 0.0);
+	
+
 
 fclose(fid1);
 
