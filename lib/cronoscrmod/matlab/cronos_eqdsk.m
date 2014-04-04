@@ -92,9 +92,11 @@ F=interp1(psinormx,F,xpsi);
 FFprime=interp1(psinormx,FFprime,xpsi).*F; %FFprime(1) = 0.0; 
 %FFprime(1)=(FFprime(1)+FFprime(2))/2.0; 
 %FFprime(1) = FFprime(2);
+FFprime(1) = 0.0;
 P=interp1(psinormx,P,xpsi);
 Pprime=interp1(psinormx,Pprime,xpsi); %Pprime(1) = 0.0; 
-Pprime(1)=(Pprime(1)+Pprime(2))/2.0; 
+%Pprime(1)=(Pprime(1)+Pprime(2))/2.0; 
+Pprime(1)=Pprime(2)/2.0;
 %Pprime(1)=Pprime(2);
 Pprime(1) = 0.0;
 
