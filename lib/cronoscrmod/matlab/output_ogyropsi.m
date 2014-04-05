@@ -8,6 +8,23 @@ function no_results = output_ogyropsi(data, tavg)
 % set by.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This file is currently incomplete:
+% It outputs zeros for a lot of quantities
+% and skips some altogether. It is intended
+% to output quantities to compare to a CHEASE
+% run which uses an EQDSK file from the same
+% Cronos run as input
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% data is the cronos data structure
+% and t avg is an a time window given
+% as an array of two values... quanitities
+% are averaged over that time window.
+% e.g. output_ogyropsi(data, [45.2 46]);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 ind=round(interp1(data.gene.temps,1:length(data.gene.temps),tavg)); ind=ind(1):ind(2); %find the indexes in data.gene.temps of the desired time window
 npsi = size(data.equi.R, 2);
 nchi = size(data.equi.R, 3) - 1; % ogyropsi doesn't have the 2pi point
