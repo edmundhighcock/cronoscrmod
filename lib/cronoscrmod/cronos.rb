@@ -191,6 +191,11 @@ class CodeRunner
 			refresh_gui
 		end
 
+		def load_result
+			cronos.puts("zuiload('#@directory/#{@run_name}_resultat.mat')")
+			refresh_gui
+		end
+
 		def cronos
 			set_cronos_path
 			rcp.engine_handler.cronos

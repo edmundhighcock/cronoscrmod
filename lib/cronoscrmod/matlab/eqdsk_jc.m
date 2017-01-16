@@ -1,15 +1,17 @@
-function no_results = cronos_eqdsk(data, fname, tavg, resofactor)
-%CREATES A EFIT EQDSK G FILE AND MATLABSTRUCTURE FROM CRONOS DATA.EQUI DATA. USED FOR CREATING 
+function no_results = eqdsk_jc(data, fname, tavg, resofactor)
+%CREATES A EFIT EQDSK G FILE AND MATLAB STRUCTURE FROM CRONOS DATA.EQUI DATA. USED FOR CREATING 
 %GEOMETRY INPUT FILES FOR GENE. ALSO CREATES CONVENIENT MATLAB STRUCTURE WITH KEY INFORMATION
 %
 %A CRONOS DATA FILE NEEDS TO BE IN THE BACKGROUND WHEN RUNNING THIS ROUTINE
 %J.Citrin 20.05.2013
 
+disp('Version 2.2');
+
 
 %%%%%%%%%%%%INPUT PARAMETERS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %fname='JET75225_Ptotred'; %choose a name for the output geometry file
 %tavg=[46 47]; %choose a time window for averaging of CRONOS data
-printflag=0; %flag to plot or not (=1) or not to plot (anything else) a figure of the 2D flux surfaces
+printflag=1; %flag to plot or not (=1) or not to plot (anything else) a figure of the 2D flux surfaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -27,16 +29,16 @@ resotheta=length(R(1,:)); %finds the theta resolution from the CRONOS simulation
 %JC 15.5.13
 %TO BE CONSISTENT WITH THE CHEASE EQDSK DATA, PSIEQUI IS SHIFTED SUCH THAT PSIEQUI(1)=0
 %FEEL FREE TO CHANGE THIS, IT IS TRIVIAL TO DO SO
-psiequi=psiequi-psiequi(1);
+%psiequi=psiequi-psiequi(1);
 %psiequi=psiequi-psiequi(end);
 xrho=mean(data.equi.rhoRZ(ind,:)); xrho=xrho./xrho(end);
 psix=interp1(xrho,psiequi,x);
 rho1=mean(data.equi.rhomax(ind));
 
 %set the resolution of the rectangular box (for now kept the same as the theta resolution from cronos)
-resoR=resotheta*resofactor; 
-resoZ=resotheta*resofactor;
-resopsi=resotheta*resofactor;
+resoR=resotheta; 
+resoZ=resotheta;
+resopsi=resotheta;
 
 %resoR=100; 
 %resoZ=100;
@@ -45,13 +47,11 @@ resopsi=resotheta*resofactor;
 %interpolate equi.psi onto the uniform toroidal flux grid and create 
 %the normalized poloidal flux coordinate to interpolate the q, P, P', F, FF' profiles
 xrho=mean(data.equi.rhoRZ(ind,:)); xrho=xrho./xrho(end); xrho=double(xrho);
-psix=interp1(xrho,psiequi,x, 'splines');
+psix=interp1(xrho,psiequi,x);
 psinormx=(psix-psix(1))./(psix(end)-psix(1));
-psinormequi = (psiequi-psiequi(1))./(psiequi(end) - psiequi(1));
 dvdrho=mean(data.equi.vpr(ind,:));
 %create desired uniform normalized poloidal flux grid
 xpsi=linspace(0,1,resopsi);
-
 
 
 %define boundaries of rectangular grid
@@ -60,14 +60,8 @@ minR=min(min(R))-bleed;
 maxZ=max(max(Z))+bleed;
 minZ=min(min(Z))-bleed;
 
-maxxZ = max([maxZ, -minZ]);
-maxZ = maxxZ;
-minZ = -maxxZ;
-
 %create rectangular grid
-xR=linspace(minR,maxR,resoR); 
-% EGH Z is defined from - to plus, and it must also be symmetric
-yR=linspace(minZ,maxZ,resoZ);
+xR=linspace(minR,maxR,resoR); yR=linspace(maxZ,minZ,resoZ);
 [xnodes,ynodes] = meshgrid(xR,yR); %xnodes, ynodes are matrices defining the x and y (R and Z) coordinates
 
 %Create a 2D array for psi corresponding to x,theta (is a flux function, so same at every theta and tmp is discarded)
@@ -83,35 +77,16 @@ qraw=mean(data.equi.q(ind,:)); qraw=double(qraw);
 s=mean(data.equi.shear(ind,:)); 
 F=mean(data.equi.F(ind,:));
 P=mean(data.prof.ptot(ind,:));
-%FFprime=gradient(F,-psiequi); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
-% EGH Bugfix
-% F and P are on grids of x not rho, so need to take gradient wrt psix
-FFprime=gradient(F,psix); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
-Pprime=gradient(P,psix);
-
-% Values of psi on the output grid of xpsi
-psixpsi = interp1(psinormequi, psiequi, xpsi);
+%FFprime=-gradient(F,-psiequi).*F; %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
+FFprime=gradient(F,-psiequi); %the minus sign on psiequi defines the gradient to the ORIGINAL psi (i.e. the unflipped one)
+Pprime=gradient(F,-psiequi);
+%Pprime=-gradient(P,-psiequi);
 
 q=interp1(psinormx,qraw,xpsi);
-F=interp1(psinormx,F,xpsi, 'spline');
-FFprime=interp1(psinormx,FFprime,xpsi).*F; %FFprime(1) = 0.0; 
-%FFprime = gradient(F, psixpsi).*F;
-%FFprime = interp1(psinormequi, mean(squeeze(data.equi.df2RZ(ind, :)))*pi, xpsi);
-%FFprime(1)=(FFprime(1)+FFprime(2))/2.0; 
-FFprime(3) = FFprime(4);
-FFprime(2) = FFprime(3);
-FFprime(1) = FFprime(2);
-%FFprime(1) = 0.0;
-P=interp1(psinormx,P,xpsi, 'spline');
-Pprime=interp1(psinormx,Pprime,xpsi); %Pprime(1) = 0.0; 
-%Pprime = interp1(psinormequi, mean(squeeze(data.equi.dprRZ(ind, :)))*-300000, xpsi);
-%Pprime=gradient(P, psixpsi);
-%Pprime(1)=(Pprime(1)+Pprime(2))/2.0; 
-%Pprime(1)=Pprime(2)/2.0;
-Pprime(3)=Pprime(4);
-Pprime(2)=Pprime(3);
-Pprime(1)=Pprime(2);
-%Pprime(1) = 0.0;
+F=interp1(psinormx,F,xpsi);
+FFprime=interp1(psinormx,FFprime,xpsi); FFprime(1)=FFprime(2); 
+P=interp1(psinormx,P,xpsi);
+Pprime=interp1(psinormx,Pprime,xpsi); Pprime(1)=Pprime(2); 
 
 %define header quantities for eqdsk file
 boxw=maxR-minR; 
@@ -121,7 +96,6 @@ rleft=minR;
 
 zmid=(maxZ+minZ)/2; 
 zmaxis=Z(1,1);
-
 
 %ZMID AND ZMAXIS SWITCHED TO ZERO TO BE CONSISTENT WITH THE CHEASE EQDSK INFO
 %zmid=0; 
@@ -135,15 +109,13 @@ psiAxis=psiequi(1);
 psiSep=psiequi(end);
 B=mean(data.geo.b0(ind));
 Ip=mean(data.gene.ip(ind))/1e6;
-Ip=mean(data.gene.ip(ind));
 
 fid1 = fopen(fname, 'w');
 
 %write header quantities
-%fprintf(fid1, '     JET    EFIT  TRACER                           %d  %d  %d\n',0,resoR,resoZ);
-fprintf(fid1, '   JET    EFIT   FILE   FROM    CRONOS            %d%4d%4d\n',0,resoR,resoZ);
+fprintf(fid1, '     JET    EFIT  TRACER                           %d  %d  %d\n',0,resoR,resoZ);
 fprintf(fid1,'% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n% 16.9E% 16.9E% 16.9E% 16.9E% 16.9E\n',...
-boxw,boxh,rmaj,rleft,zmid,rmaxis1,zmaxis,psiAxis,psiSep,B,Ip,psiAxis,0,rmaxis1,0,zmaxis,0,psiSep,0,0);;
+boxw,boxh,rmaj,rleft,zmid,rmaxis1,zmaxis,psiAxis,psiSep,B,0,psiAxis,0,rmaxis1,0,zmaxis,0,psiSep,0,0);;
 
 %write F, FF', P, P' quantities 
 for k=1:resopsi
@@ -191,28 +163,6 @@ for k=1:resopsi
 		fprintf(fid1,'\n');
 	end
 end
-
-fprintf(fid1, ' %d %d \n', resotheta-1, 1);
-j = 1
-for k=1:(resotheta-1)
-	fprintf(fid1, '% 16.9E', R(end, k));
-	if mod(j,5)==0
-		fprintf(fid1, '\n');
-	end
-	j = j + 1;
-	fprintf(fid1, '% 16.9E', Z(end, k));
-	if mod(j,5)==0
-		fprintf(fid1, '\n');
-	end
-	j = j + 1;
-end
-	if mod(j-1,5)~=0
-		fprintf(fid1, '\n');
-	end
-
-fprintf(fid1, ' %16.9E  %16.9E \n', 0.0, 0.0);
-	
-
 
 fclose(fid1);
 
